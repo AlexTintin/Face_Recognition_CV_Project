@@ -91,10 +91,6 @@ def main():
     if cuda:
         model = model.cuda()
 
-    criterion = nn.CrossEntropyLoss()
-    if cuda:
-        criterion = criterion.cuda()
-
     # 3. optimizer
     view = LiveView(
         cuda=cuda,
@@ -104,6 +100,8 @@ def main():
         flatten_feature=True,
         print_freq=1,
     )
+
+    view.view()
 
 
 if __name__ == '__main__':

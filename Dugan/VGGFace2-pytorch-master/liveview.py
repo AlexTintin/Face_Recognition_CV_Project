@@ -27,8 +27,6 @@ class LiveView(object):
       :param print_freq:
       """
       self.cuda = cuda
-
-      self.model = CorrelationModel(model)
       self.log_file = log_file
       self.feature_dir = feature_dir
       self.flatten_feature = flatten_feature
@@ -45,6 +43,8 @@ class LiveView(object):
         self.users.append(self.faceCapture())
         print("There are currently %d user(s), another? y for yes, anything else for no."%len(self.users))
         nput = input()
+
+      self.model = CorrelationModel(model,self.users)
 
     def faceCapture(self,):
       cam = cv2.VideoCapture(0)
@@ -65,9 +65,9 @@ class LiveView(object):
         y = frame.shape[0]//2 - 122
         x = frame.shape[1]//2 - 122
         w = 3
-        tl = (y-w,x-w)
-        br = (y+244 + w,x+247 + w)
-        cv2.rect(frame,tl,br,(0,0,255),w)
+        tl = (x-w,y-w)
+        br = (x+247 + w,y+244 + w)
+        cv2.rectangle(frame,tl,br,(0,0,255),w)
         cv2.imshow("Current Face", frame)
 
         if k%256 == 27:
@@ -77,7 +77,7 @@ class LiveView(object):
         elif k%256 == 32 and len(imgs) < 5:
           # SPACE pressed
           frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-          imgs.append(frame[y:y+244,x:x+244])
+          imgs.append(frame[x:x+244,y:y+244])
           print("Added face perspective.")
           img_counter += 1
         # END LOOP
@@ -87,11 +87,10 @@ class LiveView(object):
       return imgs
 
     def view(self):
-      self.model.eval()
       cam = cv2.VideoCapture(0)
       cv2.namedWindow("Found Faces")
 
-      while True and len(imgs) < 5:
+      while True:
         ret, frame = cam.read()
         if not ret:
             print("Webcam failure.")
@@ -116,7 +115,7 @@ class LiveView(object):
           if corrMax > thresh:
             idx = user.index(corrMax)
             tlPos = user[idx][1]
-            cv2.rect(tlPos,(tlPos[0]+244,tlPos[1]+244))
+            cv2.rectangle(tlPos,(tlPos[0]+244,tlPos[1]+244))
             # Todo: Names
           else:
             # not found.
