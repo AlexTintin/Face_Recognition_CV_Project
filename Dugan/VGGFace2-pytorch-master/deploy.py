@@ -133,63 +133,15 @@ def main():
         criterion = criterion.cuda()
 
     # 3. optimizer
-    if args.cmd == 'train':
-        optim = torch.optim.SGD(
-            [
-                {'params': get_parameters(model, bias=False)},
-                {'params': get_parameters(model, bias=True), 'lr': cfg['lr'] * 2, 'weight_decay': 0},
-            ],
-            lr=cfg['lr'],
-            momentum=cfg['momentum'],
-            weight_decay=cfg['weight_decay'])
-        if resume:
-            optim.load_state_dict(checkpoint['optim_state_dict'])
-
-        # lr_policy: step
-        last_epoch = start_iteration if resume else -1
-        lr_scheduler = torch.optim.lr_scheduler.StepLR(optim,  cfg['step_size'],
-                                                       gamma=cfg['gamma'], last_epoch=last_epoch)
-
-    if args.cmd == 'train':
-        trainer = Trainer(
-            cmd=args.cmd,
-            cuda=cuda,
-            model=model,
-            criterion=criterion,
-            optimizer=optim,
-            lr_scheduler=lr_scheduler,
-            train_loader=train_loader,
-            val_loader=val_loader,
-            log_file=log_file,
-            max_iter=cfg['max_iteration'],
-            checkpoint_dir=args.checkpoint_dir,
-            print_freq=1,
-        )
-        trainer.epoch = start_epoch
-        trainer.iteration = start_iteration
-        trainer.train()
-    elif args.cmd == 'test':
-        validator = Validator(
-            cmd=args.cmd,
-            cuda=cuda,
-            model=model,
-            criterion=criterion,
-            val_loader=val_loader,
-            log_file=log_file,
-            print_freq=1,
-        )
-        validator.validate()
-    elif args.cmd == 'extract':
-        extractor = Extractor(
-            cuda=cuda,
-            model=model,
-            val_loader=val_loader,
-            log_file=log_file,
-            feature_dir=args.feature_dir,
-            flatten_feature=True,
-            print_freq=1,
-        )
-        extractor.extract()
+    view = LiveView(
+        cuda=cuda,
+        model=model,
+        val_loader=val_loader,
+        log_file=log_file,
+        feature_dir=args.feature_dir,
+        flatten_feature=True,
+        print_freq=1,
+    )
 
 
 if __name__ == '__main__':
