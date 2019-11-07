@@ -1,7 +1,12 @@
+
+import argparse
+import os
+import sys
 import torch as t
+import torch.nn as nn
 
 class CorrelationModel:
-  def __init__(model):
+  def __init__(self,model):
     self.feat_gen = nn.Sequential(*list(model.children())[:-1])
   def correlate(search_space,targets):
     # search_space is a single 3 channel image with unknown size.
@@ -19,7 +24,7 @@ class CorrelationModel:
 
     return self._internal_correlate(search_space_features,target_features)
 
-  def _internal_correlate(search_space_features,target_features):
+  def _internal_correlate(self,search_space_features,target_features):
     f_ssf = search_space_features.fft(2)
     f_tfs = [target_feature.fft(2) for target_feature in target_features]
     results = [ [self._internal_single_fft_correlate(f_tf[x][y]) for y in range(len(f_tf.shape[1])) ] for f_tf in f_tfs ]
@@ -28,7 +33,8 @@ class CorrelationModel:
 
     return results
 
-  def _internal_single_fft_correlate(img1,img2):
+  def _internal_single_fft_correlate(self,img1,img2):
+    # Something might need reshaped here.
     r1 = f1 * f2
     r2 = r1.ifft(2)
     return r2.max(0)

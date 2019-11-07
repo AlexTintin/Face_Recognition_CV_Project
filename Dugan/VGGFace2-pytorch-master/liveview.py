@@ -17,11 +17,10 @@ import tqdm
 
 class LiveView(object):
 
-    def __init__(self, cuda, model, val_loader, log_file, feature_dir, flatten_feature=True, print_freq=1):
+    def __init__(self, cuda, model, log_file, feature_dir, flatten_feature=True, print_freq=1):
       """
       :param cuda:
       :param model:
-      :param val_loader:
       :param log_file: log file name. logs are appended to this file.
       :param feature_dir:
       :param flatten_feature:
@@ -30,7 +29,6 @@ class LiveView(object):
       self.cuda = cuda
 
       self.model = CorrelationModel(model)
-      self.val_loader = val_loader
       self.log_file = log_file
       self.feature_dir = feature_dir
       self.flatten_feature = flatten_feature
@@ -44,11 +42,11 @@ class LiveView(object):
       # Take 5 face shots in 224x224
       # Front, side:left, side:right, looking down, looking up
       while nput is 'y':
-        self.users.append(faceCapture())
+        self.users.append(self.faceCapture())
         print("There are currently %d user(s), another? y for yes, anything else for no."%len(self.users))
-        input(nput)
+        nput = input()
 
-    def faceCapture():
+    def faceCapture(self,):
       cam = cv2.VideoCapture(0)
       cv2.namedWindow("Current Face")
       img_counter = 0
@@ -58,6 +56,7 @@ class LiveView(object):
       while True and len(imgs) < 5:
         ret, frame = cam.read()
         if not ret:
+            print("Webcam failure.")
             break
         k = cv2.waitKey(1)
 
@@ -95,6 +94,7 @@ class LiveView(object):
       while True and len(imgs) < 5:
         ret, frame = cam.read()
         if not ret:
+            print("Webcam failure.")
             break
         k = cv2.waitKey(1)
 
