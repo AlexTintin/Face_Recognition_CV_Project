@@ -4,6 +4,7 @@ import os
 import sys
 import torch as t
 import torch.nn as nn
+import torch.nn.functional as F
 
 from torch.autograd import Variable
 from torchvision import models, transforms
@@ -33,11 +34,11 @@ class CorrelationModel:
       batch = t.stack(batch)
       target_features.append(self.feat_gen(batch))
 
-    target_features = [target_feature.rfft(2) for target_feature in target_features]
+    #target_features = [target_feature.rfft(2) for target_feature in target_features]
 
     return target_features
 
-  def correlate(self,search_space,targets):
+  def correlate(self,search_space,target_features):
     # search_space is a single 3 channel image with unknown size.
     # [1][H][W][3]
     # targets is an unknown number of unknown perspective of 3 channel smaller
@@ -45,13 +46,15 @@ class CorrelationModel:
     # [ID][Perspective][244][224][3]
     search_space = preprocess(search_space).unsqueeze(0).cuda()
     search_space_features = self.feat_gen(search_space)
+    output = self.inter_single_conv_correlate(search_space_features)
+    print(output[0])
 
-    return self._internal_correlate(search_space_features)
+    return output
 
   def _internal_correlate(self,search_space_features):
     f_ssf = search_space_features.rfft(2)
     results = [ [self._internal_single_fft_correlate(f_ssf,f_tf[y]) for y in range(f_tf.shape[0]) ] for f_tf in self.target_features ]
-
+    print(results)
     # RETURN SHAPE: [ID][PERSPECTIVE](CorrelateValue,CorrelateIDX)
 
     return results
@@ -63,3 +66,14 @@ class CorrelationModel:
     r1 = f1 * f2
     r2 = r1.irfft(2)
     return r2.max(0)
+
+  def inter_single_conv_correlate(self,ssf):
+    out = []
+    A = Variable(ssf)
+    for tf in self.target_features:
+      for y in range(tf.shape[0]):
+        M = Variable(tf[y]).unsqueeze(0)
+        conv = F.conv2d(A, M)
+        out.append(conv)
+
+    return out

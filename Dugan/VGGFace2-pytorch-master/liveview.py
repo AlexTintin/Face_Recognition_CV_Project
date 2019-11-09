@@ -109,14 +109,15 @@ class LiveView(object):
 
         for user in results:
           # USER SHAPE [Perspective](CorrVal,TLPos)
-          corrMa = max(user)[0]
+          corrMax = max(user)
 
           # If its a match...
-          if corrMax > thresh:
-            idx = user.index(corrMax)
-            tlPos = user[idx][1]
-            cv2.rectangle(tlPos,(tlPos[0]+244,tlPos[1]+244))
+         # if corrMax > thresh:
+          idx = user[corrMax]
+          tlPos = user[idx][1]
+          cv2.rectangle(tlPos,(tlPos[0]+244,tlPos[1]+244))
             # Todo: Names
-          else:
+          #else:
             # not found.
-            pass
+         #n
+        # pass
