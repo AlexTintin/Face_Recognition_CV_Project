@@ -30,12 +30,11 @@ class CorrelationModel:
     target_features = []
 
     for target in targets:
-      batch = [ preprocess(perspective).cuda() for perspective in target ]
+      batch = [preprocess(perspective).cuda() for perspective in target ]
       batch = t.stack(batch)
       target_features.append(self.feat_gen(batch))
-
+      #size of target feature vector [ID][perspective][1024][16][16]
     #target_features = [target_feature.rfft(2) for target_feature in target_features]
-
     return target_features
 
   def correlate(self,search_space,target_features):
@@ -46,15 +45,15 @@ class CorrelationModel:
     # [ID][Perspective][244][224][3]
     search_space = preprocess(search_space).unsqueeze(0).cuda()
     search_space_features = self.feat_gen(search_space)
+    #size of search_space_features = [1,1024,30,40]
     output = self.inter_single_conv_correlate(search_space_features)
-    print(output[0])
+    # print(output[0].size())
 
     return output
 
   def _internal_correlate(self,search_space_features):
     f_ssf = search_space_features.rfft(2)
     results = [ [self._internal_single_fft_correlate(f_ssf,f_tf[y]) for y in range(f_tf.shape[0]) ] for f_tf in self.target_features ]
-    print(results)
     # RETURN SHAPE: [ID][PERSPECTIVE](CorrelateValue,CorrelateIDX)
 
     return results
@@ -62,18 +61,18 @@ class CorrelationModel:
   def _internal_single_fft_correlate(self,f1,f2):
     # Something might need reshaped here.
     f1 = f1.squeeze()
-    print(f1.shape,f2.shape)
     r1 = f1 * f2
     r2 = r1.irfft(2)
     return r2.max(0)
 
   def inter_single_conv_correlate(self,ssf):
-    out = []
+    out_all_users = []
     A = Variable(ssf)
     for tf in self.target_features:
+      out_one_user = []
       for y in range(tf.shape[0]):
         M = Variable(tf[y]).unsqueeze(0)
-        conv = F.conv2d(A, M)
-        out.append(conv)
-
-    return out
+        conv = (F.conv2d(A, M).squeeze(0)).squeeze(0)
+        out_one_user.append(conv)
+    out_all_users.append(out_one_user)
+    return out_all_users
