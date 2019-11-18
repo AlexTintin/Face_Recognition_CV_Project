@@ -90,7 +90,9 @@ class LiveView(object):
     def view(self):
       cam2 = cv2.VideoCapture(0)
       cv2.namedWindow("Found Faces")
+      cv2.namedWindow("Correlation Result")
       while True:
+        print("\rNew iteration...",end='')
         ret, frame = cam2.read()
         if not ret:
             print("Webcam failure.")
@@ -103,29 +105,65 @@ class LiveView(object):
           break
         frame2 = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = self.model.correlate(frame2,self.users)
+        # print(results)
 
-        # RESULTS IS IN SHAPE [User][Perspective](CorrVal,TLPosition) = [User][Perspective](15,25)
+        # RESULTS IS IN SHAPE [User][Perspective](CorrVal,TLPosition) = [User][Perspective][15][25]
         for user in results:
           p=0
           pos = np.zeros(len(user))
-          for pers in user:
+          print("IN USER, LOOKING AT PERSPECTIVES.")
 
+          # Get the highest correlalted perspective of the user.
+          for pers in user:
             pos[p] = torch.max(pers)
             p+=1
           perspective = np.argmax(pos)
-          idx = torch.argmax(user[perspective])
-          tl0 = (idx//user[perspective].size()[1])/user[perspective].size()[0]*frame2.shape[0]
-          tl1 = (idx % user[perspective].size()[1])/user[perspective].size()[1]*frame2.shape[1]
-          cv2.rectangle(frame2, (tl0.detach().cpu()-122,tl1.detach().cpu()-122),
-                        (tl0.detach().cpu() + 122, tl1.detach().cpu() + 122),
-                        (0, 0, 255), 3)
+
+          disp = user[perspective].detach().cpu().numpy()
+          disp = disp / np.amax(disp)
+
+          disp = np.stack((disp,disp,disp),axis=2)
+          cv2.imshow("Correlation Result", disp)
+
+          # This isn't working right.
+          idx1 = torch.argmax(user[perspective]).detach().cpu().numpy()
+          idx2 = torch.argmax(user[perspective]).detach().cpu().numpy()
+
+          h    = user[perspective].shape[0]
+          w    = user[perspective].shape[1]
+
+          idx1 = (idx1 // w) / h
+          idx2 = (idx2 %  w) / w
+
+
+          # will need to work on this:
+          tl0 = int((idx1) * frame2.shape[0])
+          tl1 = int((idx2) * frame2.shape[1])
+          print(tl0,tl1)
+
+          # We want to draw on frame, frame2 is RGB, frame is BGR. CV2 is dumb
+          #   with non-standard image channels.
+          cv2.rectangle(frame, (tl1 - 366, tl0 - 366),
+                               (tl1 - 122, tl0 - 122),
+                               (0, 0, 255), 3)
+
+
+          cv2.rectangle(frame, (tl1 - 224, tl0 - 224),
+                               (tl1 - 000, tl0 - 000),
+                               (255, 0, 0), 3)
+
+
+          cv2.rectangle(frame, (tl1 - 122, tl0 - 122),
+                               (tl1 + 122, tl0 - 366),
+                               (0, 255, 0), 3)
               #print(corrMax,idx)
               #tlPos = user[idx][1]
           #print(results)
+        cv2.imshow("Found Faces", frame)
       cam2.release()
       cv2.destroyAllWindows()
       '''
-        
+
         for user in results:
           # USER SHAPE [Perspective](CorrVal,TLPos)
           corrMax = max(user)
