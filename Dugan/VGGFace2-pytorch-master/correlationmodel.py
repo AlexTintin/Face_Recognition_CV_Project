@@ -23,7 +23,7 @@ preprocess = transforms.Compose([
 class CorrelationModel:
   def __init__(self,model,targets):
     model.eval()
-    self.feat_gen = nn.Sequential(*list(model.children())[:-6])
+    self.feat_gen = nn.Sequential(*list(model.children())[:-7])
     self.target_features = self._internal_target_feat_gen(targets)
 
   def _internal_target_feat_gen(self,targets):

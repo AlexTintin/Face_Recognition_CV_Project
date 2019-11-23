@@ -148,7 +148,7 @@ class LiveView(object):
                                (0, 0, 255), 3)
 
 
-          cv2.rectangle(frame, (tl1 - 224, tl0 - 224),
+          cv2.rectangle(frame, (tl1 - 244, tl0 - 244),
                                (tl1 - 000, tl0 - 000),
                                (255, 0, 0), 3)
 
