@@ -65,6 +65,7 @@ class CorrelationModel:
     return r2.max(0)
 
   def inter_single_conv_correlate(self,ssf):
+    '''
     A = Variable(ssf)
     out_all_users = []
     for tf in self.target_features:
@@ -76,6 +77,7 @@ class CorrelationModel:
         out_one_user.append(t.mean(conv))
     '''
     A = Variable(ssf)
+    out_all_users = []
     for tf in self.target_features:
       out_one_user = []
       for y in range(tf.shape[0]):
@@ -83,7 +85,7 @@ class CorrelationModel:
         conv = (F.conv2d(A, M).squeeze(0)).squeeze(0)
 
         out_one_user.append(conv)
-    '''
+
     out_all_users.append(out_one_user)
     # RETURN SHAPE: [id][perspective][H][W]
     return out_all_users

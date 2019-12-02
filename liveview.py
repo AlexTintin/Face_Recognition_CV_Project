@@ -163,11 +163,9 @@ class LiveView(object):
       cam2.release()
       cv2.destroyAllWindows()
       '''
-
         for user in results:
           # USER SHAPE [Perspective](CorrVal,TLPos)
           corrMax = max(user)
-
           # If its a match...
          # if corrMax > thresh:
           idx = (user == corrMax).nonzero()
