@@ -23,7 +23,7 @@ preprocess = transforms.Compose([
 class CorrelationModel:
   def __init__(self,model,targets):
     model.eval()
-    self.feat_gen = nn.Sequential(*list(model.children())[:-7])
+    self.feat_gen = nn.Sequential(*list(model.children())[:-1])
     self.target_features = self._internal_target_feat_gen(targets)
 
   def _internal_target_feat_gen(self,targets):
@@ -47,7 +47,6 @@ class CorrelationModel:
     search_space_features = self.feat_gen(search_space)
     #size of search_space_features = [1,1024,30,40]
     output = self.inter_single_conv_correlate(search_space_features)
-    print(output[0][0].size())
 
     return output
 
@@ -66,14 +65,25 @@ class CorrelationModel:
     return r2.max(0)
 
   def inter_single_conv_correlate(self,ssf):
+    A = Variable(ssf)
     out_all_users = []
+    for tf in self.target_features:
+      out_one_user = []
+      for y in range(tf.shape[0]):
+        M = Variable(tf[y]).unsqueeze(0)
+        conv = (t.pow((A-M),2)/(A+M+0.000000001)).squeeze(0)
+        print(t.sum(conv))
+        out_one_user.append(t.mean(conv))
+    '''
     A = Variable(ssf)
     for tf in self.target_features:
       out_one_user = []
       for y in range(tf.shape[0]):
         M = Variable(tf[y]).unsqueeze(0)
         conv = (F.conv2d(A, M).squeeze(0)).squeeze(0)
+
         out_one_user.append(conv)
+    '''
     out_all_users.append(out_one_user)
     # RETURN SHAPE: [id][perspective][H][W]
     return out_all_users

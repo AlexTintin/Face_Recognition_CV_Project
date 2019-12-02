@@ -1,3 +1,10 @@
 
-Dugan/VGGFace2-pytorch-master/resnet50_ft_weight.pkl
+resnet50_ft_weight.pkl
 *.pyc
+.git/
+.idea/
+__pycache__/
+images/
+
+
+
